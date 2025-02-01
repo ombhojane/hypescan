@@ -5,7 +5,7 @@ from services.coin_api import validate_coin, CoinInfo
 from services.social_api import get_reddit_sentiment, RedditSentimentResponse
 from services.dex_api import get_dex_data, DexResponse
 from forecasting import ForecastData, Prediction
-from moralisapi import fetch_token_price
+from services.moralisapi import fetch_token_price
 
 app = FastAPI()
 
