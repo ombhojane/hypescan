@@ -7,9 +7,11 @@ from services.dex_api import get_dex_data
 from services.moralisapi import fetch_token_price
 import uvicorn
 from services.gmgn_api import get_gmgn_info, GMGNResponse
+from services.crewat import crew
+from dotenv import load_dotenv
 
 app = FastAPI()
-
+load_dotenv()
 
 @app.get("/validate-coin", response_model=CoinInfo)
 async def validate_coin_endpoint(symbol: str):
@@ -51,6 +53,24 @@ def get_token_price(token_address: str):
     if "error" in price_data:
         raise HTTPException(status_code=400, detail=price_data["error"])
     return price_data
+
+
+@app.post("/analyze-token-price")
+async def analyze_token_price(token_address: str):
+    # Fetch the token price
+    price_data = fetch_token_price(token_address)
+    if "error" in price_data:
+        raise HTTPException(status_code=400, detail=price_data["error"])
+
+    print(
+        {"price_data":price_data}
+    )
+    
+    # Kickoff the analysis with the token price data
+    analysis_result = crew.kickoff(inputs={"data":price_data})
+    return analysis_result
+
+
 
 @app.get("/gmgn-info", response_model=GMGNResponse)
 async def get_gmgn_token_info(token_address: str):
