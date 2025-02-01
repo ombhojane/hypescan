@@ -2,12 +2,57 @@ import requests
 from dotenv import load_dotenv
 import os
 import json
+from pydantic import BaseModel
+from typing import Optional, Dict
 
 load_dotenv()
 MORALIS_API_KEY = os.getenv("MORALIS_API_KEY")
 BASE_CHAIN = 'base'
 
-def fetch_token_price(token_address):
+class PricePercentChange(BaseModel):
+    five_min: float
+    one_hour: float
+    four_hour: float
+    twenty_four_hour: float
+
+class LiquidityPercentChange(BaseModel):
+    five_min: float
+    one_hour: float
+    four_hour: float
+    twenty_four_hour: float
+
+class Volume(BaseModel):
+    five_min: float
+    one_hour: float
+    four_hour: float
+    twenty_four_hour: float
+
+class TokenData(BaseModel):
+    tokenAddress: str
+    tokenName: str
+    tokenSymbol: str
+    tokenLogo: Optional[str]
+    pairCreated: str
+    pairLabel: str
+    pairAddress: str
+    exchange: str
+    exchangeAddress: str
+    exchangeLogo: str
+    exchangeUrl: str
+    currentUsdPrice: str
+    currentNativePrice: str
+    totalLiquidityUsd: str
+    pricePercentChange: PricePercentChange
+    liquidityPercentChange: LiquidityPercentChange
+    buys: Volume
+    sells: Volume
+    totalVolume: Volume
+    buyVolume: Volume
+    sellVolume: Volume
+    buyers: Volume
+    sellers: Volume
+
+def fetch_token_price(token_address)->TokenData :
     url = f"https://deep-index.moralis.io/api/v2.2/pairs/{token_address}/stats?chain=base"
     
     headers = {
