@@ -6,6 +6,7 @@ from services.dex_api import get_dex_data
 # from models.forecasting import Prediction
 from services.moralisapi import fetch_token_price
 import uvicorn
+from services.gmgn_api import get_gmgn_info, GMGNResponse
 
 app = FastAPI()
 
@@ -50,6 +51,16 @@ def get_token_price(token_address: str):
     if "error" in price_data:
         raise HTTPException(status_code=400, detail=price_data["error"])
     return price_data
+
+@app.get("/gmgn-info", response_model=GMGNResponse)
+async def get_gmgn_token_info(token_address: str):
+    """
+    Get token information from GMGN.ai
+    """
+    response = await get_gmgn_info(token_address)
+    if response.status == "error":
+        raise HTTPException(status_code=400, detail=response.error)
+    return response
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
