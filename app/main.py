@@ -1,9 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 from core.analysis import AgenticAI
 from services.coin_api import validate_coin, CoinInfo
 from services.social_api import get_reddit_sentiment, RedditSentimentResponse
 from services.dex_api import get_dex_data, DexResponse
 from forecasting import ForecastData, Prediction
+from moralisapi import fetch_token_price
 
 app = FastAPI()
 
@@ -41,3 +43,12 @@ async def forecast(symbol: str):
     return Prediction(
         prediction=prediction['prediction'], confidence=prediction['confidence']
     )
+
+@app.get("/token-price")
+def get_token_price(token_address: str, chain: str = BASE_CHAIN):
+    price_data = fetch_token_price(token_address, chain)
+    if "error" in price_data:
+        raise HTTPException(status_code=400, detail=price_data["error"])
+    return price_data
+
+# ... existing code ...
