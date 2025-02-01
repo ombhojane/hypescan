@@ -7,6 +7,8 @@ from services.dex_api import get_dex_data
 from services.moralisapi import fetch_token_price
 import uvicorn
 from services.gmgn_api import get_gmgn_info, GMGNResponse
+from services.gemini import analyze_gmgn_data
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -61,6 +63,25 @@ async def get_gmgn_token_info(token_address: str):
     if response.status == "error":
         raise HTTPException(status_code=400, detail=response.error)
     return response
+
+class AIAnalysisResponse(BaseModel):
+    analysis: str
+    status: str
+
+@app.get("/analyze-token", response_model=AIAnalysisResponse)
+async def analyze_token(token_address: str):
+    """
+    Get token information from GMGN.ai and analyze it using AI
+    """
+    # First get GMGN data
+    gmgn_response = await get_gmgn_info(token_address)
+    if gmgn_response.status == "error":
+        raise HTTPException(status_code=400, detail=gmgn_response.error)
+    
+    # Analyze the data using Gemini
+    analysis = await analyze_gmgn_data(gmgn_response.markdown)
+    
+    return analysis
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
