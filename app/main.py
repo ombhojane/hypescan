@@ -45,10 +45,8 @@ async def forecast(symbol: str):
     )
 
 @app.get("/token-price")
-def get_token_price(token_address: str, chain: str = BASE_CHAIN):
-    price_data = fetch_token_price(token_address, chain)
+def get_token_price(token_address: str):
+    price_data = fetch_token_price(token_address)
     if "error" in price_data:
         raise HTTPException(status_code=400, detail=price_data["error"])
     return price_data
-
-# ... existing code ...

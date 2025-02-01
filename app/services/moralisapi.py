@@ -7,8 +7,8 @@ load_dotenv()
 MORALIS_API_KEY = os.getenv("MORALIS_API_KEY")
 BASE_CHAIN = 'base'
 
-def fetch_token_price(token_address, chain):
-    url = f"https://deep-index.moralis.io/api/v2.2/pairs/{token_address}/stats?chain={chain}"
+def fetch_token_price(token_address):
+    url = f"https://deep-index.moralis.io/api/v2.2/pairs/{token_address}/stats?chain=base"
     
     headers = {
         "Accept": "application/json",
