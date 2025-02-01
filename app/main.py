@@ -50,3 +50,6 @@ def get_token_price(token_address: str):
     if "error" in price_data:
         raise HTTPException(status_code=400, detail=price_data["error"])
     return price_data
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
