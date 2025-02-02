@@ -22,6 +22,7 @@ from services.gmgncrawler import crawl_gmgn
 import os
 
 from typing import List
+from services.deepseek import get_deepseek_completion
 
 app = FastAPI()
 load_dotenv()
@@ -251,6 +252,31 @@ async def get_metrics():
     )
 
     return response_data
+
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    messages: List[ChatMessage]
+    temperature: float = 1.0
+    max_tokens: int = 1024
+
+
+@app.post("/chat")
+async def chat_completion(request: ChatRequest):
+    try:
+        messages = [{"role": msg.role, "content": msg.content} for msg in request.messages]
+        response = await get_deepseek_completion(
+            messages=messages,
+            temperature=request.temperature,
+            max_tokens=request.max_tokens
+        )
+        return {"response": response}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
