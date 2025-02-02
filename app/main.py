@@ -58,7 +58,6 @@ def get_token_price(token_address: str):
         raise HTTPException(status_code=400, detail=price_data["error"])
     return price_data
 
-
 @app.post("/analyze-token-price")
 async def analyze_token_price(token_address: str):
     # Fetch the token price
@@ -73,8 +72,6 @@ async def analyze_token_price(token_address: str):
     # Kickoff the analysis with the token price data
     analysis_result = crew.kickoff(inputs={"data":price_data})
     return analysis_result
-
-
 
 @app.get("/gmgn-info", response_model=GMGNResponse)
 async def get_gmgn_token_info(token_address: str):
@@ -111,9 +108,6 @@ async def search_tweets_endpoint(
     search_type: SearchType = SearchType.TOP,
     max_tweets: int = 10
 ):
-    """
-    Search for tweets based on a query.
-    """
     # Get Twitter credentials from environment variables
     twitter_username = os.getenv("TWITTER_USERNAME")
     twitter_password = os.getenv("TWITTER_PASSWORD")
