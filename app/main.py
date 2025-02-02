@@ -3,20 +3,28 @@ from core.agentic_ai import AgenticAI
 from services.coin_api import validate_coin, CoinInfo
 from services.social_api import get_reddit_sentiment, RedditSentimentResponse
 from services.dex_api import get_dex_data
+
 # from models.forecasting import Prediction
 from services.moralisapi import fetch_token_price
 import uvicorn
 from services.gmgn_api import get_gmgn_info, GMGNResponse
 from services.crewat import crew
-from services.twitter_api import search_twitter, SearchType, TwitterSearchResponse
+from services.twitter_api import (
+    search_twitter,
+    SearchType,
+    TwitterSearchResponse,
+)
 from dotenv import load_dotenv
 from services.gemini import analyze_gmgn_data
 from pydantic import BaseModel
 from services.gmgncrawler import crawl_gmgn
 import os
 
+from typing import List
+
 app = FastAPI()
 load_dotenv()
+
 
 @app.get("/validate-coin", response_model=CoinInfo)
 async def validate_coin_endpoint(symbol: str):
@@ -52,12 +60,14 @@ async def get_sentiment(symbol: str):
 #         prediction=prediction['prediction'], confidence=prediction['confidence']
 #     )
 
+
 @app.get("/token-price")
 def get_token_price(token_address: str):
     price_data = fetch_token_price(token_address)
     if "error" in price_data:
         raise HTTPException(status_code=400, detail=price_data["error"])
     return price_data
+
 
 @app.post("/analyze-token-price")
 async def analyze_token_price(token_address: str):
@@ -66,13 +76,12 @@ async def analyze_token_price(token_address: str):
     if "error" in price_data:
         raise HTTPException(status_code=400, detail=price_data["error"])
 
-    print(
-        {"price_data":price_data}
-    )
-    
+    print({"price_data": price_data})
+
     # Kickoff the analysis with the token price data
-    analysis_result = crew.kickoff(inputs={"data":price_data})
+    analysis_result = crew.kickoff(inputs={"data": price_data})
     return analysis_result
+
 
 @app.get("/gmgn-info", response_model=GMGNResponse)
 async def get_gmgn_token_info(token_address: str):
@@ -84,9 +93,11 @@ async def get_gmgn_token_info(token_address: str):
         raise HTTPException(status_code=400, detail=response.error if response else "Error fetching GMGN data")
     return response
 
+
 class AIAnalysisResponse(BaseModel):
     analysis: str
     status: str
+
 
 @app.get("/analyze-token", response_model=AIAnalysisResponse)
 async def analyze_token(token_address: str):
@@ -97,37 +108,152 @@ async def analyze_token(token_address: str):
     gmgn_response = await get_gmgn_info(token_address)
     if gmgn_response.status == "error":
         raise HTTPException(status_code=400, detail=gmgn_response.error)
-    
+
     # Analyze the data using Gemini
     analysis = await analyze_gmgn_data(gmgn_response.markdown)
-    
+
     return analysis
+
 
 @app.get("/twitter-search", response_model=TwitterSearchResponse)
 async def search_tweets_endpoint(
-    query: str,
-    search_type: SearchType = SearchType.TOP,
-    max_tweets: int = 10
+    query: str, search_type: SearchType = SearchType.TOP, max_tweets: int = 10
 ):
     # Get Twitter credentials from environment variables
     twitter_username = os.getenv("TWITTER_USERNAME")
     twitter_password = os.getenv("TWITTER_PASSWORD")
-    
+
     if not twitter_username or not twitter_password:
-        raise HTTPException(status_code=500, detail="Twitter credentials not configured")
-    
+        raise HTTPException(
+            status_code=500, detail="Twitter credentials not configured"
+        )
+
     response = await search_twitter(
         query=query,
         search_type=search_type,
         max_tweets=max_tweets,
         username=twitter_username,
-        password=twitter_password
+        password=twitter_password,
     )
-    
+
     if response.status == "error":
         raise HTTPException(status_code=400, detail=response.error)
-        
+
     return response
 
+
+class Metric(BaseModel):
+    name: str
+    value: str
+    change: str
+
+
+class SocialMetrics(BaseModel):
+    social_mentions: Metric
+    sentiment_score: Metric
+    influencer_reach: Metric
+    community_growth: Metric
+
+
+class RiskMetrics(BaseModel):
+    overall_risk_score: Metric
+    smart_contract_safety: Metric
+    liquidity_lock_status: Metric
+
+
+class Alert(BaseModel):
+    title: str
+    description: str
+    priority: str
+    timestamp: str
+
+
+class AlertsNotification(BaseModel):
+    active_alerts: int
+    triggered_today: int
+    success_rate: str
+    response_time: str
+    alerts: List[Alert]
+
+
+class AIAndRiskResponse(BaseModel):
+    social_metrics: SocialMetrics
+    ai_signal_strength: Metric
+    risk_metrics: RiskMetrics
+    alerts_notification: AlertsNotification
+
+
+@app.get("/metrics", response_model=AIAndRiskResponse)
+async def get_metrics():
+    response_data = AIAndRiskResponse(
+        social_metrics=SocialMetrics(
+            social_mentions=Metric(
+                name="Social Mentions (24h)", value="12,458", change="↑ 425%"
+            ),
+            sentiment_score=Metric(
+                name="Sentiment Score", value="7.8/10", change="↑ 2.1"
+            ),
+            influencer_reach=Metric(
+                name="Influencer Reach", value="2.5M", change="↓ 12%"
+            ),
+            community_growth=Metric(
+                name="Community Growth", value="+15.4K", change="↑ 28%"
+            ),
+        ),
+        ai_signal_strength=Metric(
+            name="Overall Signal Strength",
+            value="Strong Buy",
+            change="Confidence: 85%",
+        ),
+        risk_metrics=RiskMetrics(
+            overall_risk_score=Metric(
+                name="Overall Risk Score",
+                value="Medium Risk",
+                change="Risk Level: 6.5/10",
+            ),
+            smart_contract_safety=Metric(
+                name="Smart Contract Safety",
+                value="85%",
+                change="Audited & Verified",
+            ),
+            liquidity_lock_status=Metric(
+                name="Liquidity Lock Status",
+                value="Locked",
+                change="180 Days Remaining",
+            ),
+        ),
+        alerts_notification=AlertsNotification(
+            active_alerts=24,
+            triggered_today=8,
+            success_rate="92%",
+            response_time="1.2s",
+            alerts=[
+                Alert(
+                    title="Critical: Social Mention Spike",
+                    description="PEPE +450% mentions in last 4h",
+                    priority="High Priority",
+                    timestamp="Triggered 5 minutes ago",
+                ),
+                Alert(
+                    title="Warning: Liquidity Change",
+                    description="DOGE -18% liquidity in 24h",
+                    priority="Medium Priority",
+                    timestamp="Triggered 15 minutes ago",
+                ),
+                Alert(
+                    title="Info: Volume Increase",
+                    description="SHIB 2.5x average volume",
+                    priority="Low Priority",
+                    timestamp="Triggered 30 minutes ago",
+                ),
+            ],
+        ),
+    )
+
+    return response_data
+
+
 if __name__ == "__main__":
+    import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
