@@ -9,7 +9,7 @@ import operator
 from services.moralisapi import fetch_token_price
 import uvicorn
 from services.gmgn_api import get_gmgn_info, GMGNResponse
-from services.crewat import crew,gngm_crew
+from services.crewat import crew, gngm_crew, combined_analysis_crew
 from services.twitter_api import (
     search_twitter,
     SearchType,
@@ -55,11 +55,30 @@ async def analyze_token_price(token_pair_address: str):
     if "error" in price_data:
         raise HTTPException(status_code=400, detail=price_data["error"])
 
-    # print({"price_data": price_data})
-
-    # Kickoff the analysis with the token price data
-    analysis_result = crew.kickoff(inputs={"data": price_data})
-    return analysis_result
+    # Get token analysis
+    token_analysis = crew.kickoff(inputs={"data": price_data})
+    
+    # Get GMGN analysis
+    base_url = "https://gmgn.ai/base/token/VIVOWmEQ_"
+    url = operator.concat(base_url, token_pair_address)
+    gmgn_data = await crawl_gmgn(url)
+    if gmgn_data is None:
+        raise HTTPException(status_code=400, detail="Error fetching GMGN data")
+    gmgn_analysis = gngm_crew.kickoff(inputs={"data": gmgn_data})
+    
+    # Perform combined analysis using Deepseek
+    combined_result = combined_analysis_crew.kickoff(
+        inputs={
+            "token_analysis": token_analysis,
+            "gmgn_analysis": gmgn_analysis
+        }
+    )
+    
+    return {
+        "token_analysis": token_analysis,
+        "gmgn_analysis": gmgn_analysis,
+        "combined_analysis": combined_result
+    }
 
 
 @app.get("/gmgn-info")
@@ -68,9 +87,32 @@ async def get_gmgn_token_info(token_address: str):
     url = operator.concat(base_url, token_address)
     response = await crawl_gmgn(url)
     if response is None:
-        raise HTTPException(status_code=400, detail=response.error if response else "Error fetching GMGN data")
-    analysis_result=gngm_crew.kickoff(inputs={"data":response})
-    return analysis_result
+        raise HTTPException(status_code=400, detail="Error fetching GMGN data")
+        
+    # Get GMGN analysis
+    gmgn_analysis = gngm_crew.kickoff(inputs={"data": response})
+    
+    # Get token price data
+    price_data = fetch_token_price(token_address)
+    if "error" not in price_data:
+        # Get token analysis
+        token_analysis = crew.kickoff(inputs={"data": price_data})
+        
+        # Perform combined analysis
+        combined_result = combined_analysis_crew.kickoff(
+            inputs={
+                "token_analysis": token_analysis,
+                "gmgn_analysis": gmgn_analysis
+            }
+        )
+        
+        return {
+            "token_analysis": token_analysis,
+            "gmgn_analysis": gmgn_analysis,
+            "combined_analysis": combined_result
+        }
+    
+    return gmgn_analysis
 
 
 class AIAnalysisResponse(BaseModel):
