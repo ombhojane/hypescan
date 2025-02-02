@@ -3,12 +3,13 @@ from core.agentic_ai import AgenticAI
 from services.coin_api import validate_coin, CoinInfo
 from services.social_api import get_reddit_sentiment, RedditSentimentResponse
 from services.dex_api import get_dex_data
+import operator
 
 # from models.forecasting import Prediction
 from services.moralisapi import fetch_token_price
 import uvicorn
 from services.gmgn_api import get_gmgn_info, GMGNResponse
-from services.crewat import crew
+from services.crewat import crew,gngm_crew
 from services.twitter_api import (
     search_twitter,
     SearchType,
@@ -17,9 +18,11 @@ from services.twitter_api import (
 from dotenv import load_dotenv
 from services.gemini import analyze_gmgn_data
 from pydantic import BaseModel
+from services.gmgncrawler import crawl_gmgn
 import os
 
 from typing import List
+from services.deepseek import get_deepseek_completion
 
 app = FastAPI()
 load_dotenv()
@@ -37,29 +40,6 @@ async def get_sentiment(symbol: str):
     return sentiment
 
 
-# @app.get("/forecast", response_model=Prediction)
-# async def forecast(symbol: str):
-#     # Fetch data from all sources
-#     coin_data = await validate_coin(symbol)
-#     dex_data = await get_dex_data(symbol)
-#     sentiment = await get_reddit_sentiment(symbol)
-
-#     # Combine data into one analysis
-#     data = {
-#         "coin_data": coin_data.dict(),
-#         "dex_data": dex_data.dict(),
-#         "sentiment": sentiment.dict(),
-#     }
-
-#     # Process with Agentic AI
-#     ai_model = AgenticAI(data)
-#     prediction = ai_model.predict()
-
-#     return Prediction(
-#         prediction=prediction['prediction'], confidence=prediction['confidence']
-#     )
-
-
 @app.get("/token-price")
 def get_token_price(token_address: str):
     price_data = fetch_token_price(token_address)
@@ -69,28 +49,28 @@ def get_token_price(token_address: str):
 
 
 @app.post("/analyze-token-price")
-async def analyze_token_price(token_address: str):
+async def analyze_token_price(token_pair_address: str):
     # Fetch the token price
-    price_data = fetch_token_price(token_address)
+    price_data = fetch_token_price(token_pair_address)
     if "error" in price_data:
         raise HTTPException(status_code=400, detail=price_data["error"])
 
-    print({"price_data": price_data})
+    # print({"price_data": price_data})
 
     # Kickoff the analysis with the token price data
     analysis_result = crew.kickoff(inputs={"data": price_data})
     return analysis_result
 
 
-@app.get("/gmgn-info", response_model=GMGNResponse)
+@app.get("/gmgn-info")
 async def get_gmgn_token_info(token_address: str):
-    """
-    Get token information from GMGN.ai
-    """
-    response = await get_gmgn_info(token_address)
-    if response.status == "error":
-        raise HTTPException(status_code=400, detail=response.error)
-    return response
+    base_url = "https://gmgn.ai/base/token/VIVOWmEQ_"
+    url = operator.concat(base_url, token_address)
+    response = await crawl_gmgn(url)
+    if response is None:
+        raise HTTPException(status_code=400, detail=response.error if response else "Error fetching GMGN data")
+    analysis_result=gngm_crew.kickoff(inputs={"data":response})
+    return analysis_result
 
 
 class AIAnalysisResponse(BaseModel):
@@ -390,6 +370,31 @@ async def get_historical_data(coinAddress: str, pairAddress: str):
         "successRate": 92,
         "responseTime": 1.2,
     }
+
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    messages: List[ChatMessage]
+    temperature: float = 1.0
+    max_tokens: int = 1024
+
+
+@app.post("/chat")
+async def chat_completion(request: ChatRequest):
+    try:
+        messages = [{"role": msg.role, "content": msg.content} for msg in request.messages]
+        response = await get_deepseek_completion(
+            messages=messages,
+            temperature=request.temperature,
+            max_tokens=request.max_tokens
+        )
+        return {"response": response}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
