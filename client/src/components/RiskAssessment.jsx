@@ -28,7 +28,7 @@ const RiskAssessment = ({ coinAddress, pairAddress }) => {
     const fetchData = async () => {
       try {
         // Constructing the API URL with coinAddress and pairAddress as query parameters
-        const url = new URL("https://api.example.com/risk-assessment");
+        const url = new URL("https://hypescan.onrender.com/risk-assessment");
 
         // Add query parameters for coinAddress and pairAddress
         const params = { coinAddress, pairAddress };
