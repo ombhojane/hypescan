@@ -1,0 +1,17 @@
+```json
+{
+  "Top Holders Analysis": {
+    "Top 10 Holder Percentages": null,
+    "Dev Wallet Status and Transactions": null,
+    "Sniper Activity and Counts": null,
+    "Blue Chip Holder Percentage": null
+  },
+  "Security Analysis": {
+    "Contract Verification Status": null,
+    "Honeypot Check Results": null,
+    "Buy/Sell Taxes": null,
+    "Risk Assessment Score": null,
+    "Renounced Status": null
+  }
+}
+```

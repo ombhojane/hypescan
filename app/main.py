@@ -12,6 +12,7 @@ from services.twitter_api import search_twitter, SearchType, TwitterSearchRespon
 from dotenv import load_dotenv
 from services.gemini import analyze_gmgn_data
 from pydantic import BaseModel
+from services.gmgncrawler import crawl_gmgn
 import os
 
 app = FastAPI()
@@ -78,9 +79,9 @@ async def get_gmgn_token_info(token_address: str):
     """
     Get token information from GMGN.ai
     """
-    response = await get_gmgn_info(token_address)
-    if response.status == "error":
-        raise HTTPException(status_code=400, detail=response.error)
+    response = await crawl_gmgn(token_address)
+    if response is None or response.status == "error":
+        raise HTTPException(status_code=400, detail=response.error if response else "Error fetching GMGN data")
     return response
 
 class AIAnalysisResponse(BaseModel):
