@@ -71,10 +71,10 @@ const AISignals = ({ coinAddress, pairAddress }) => {
     const fetchData = async () => {
       try {
         // Constructing the API URLs with coinAddress and pairAddress
-        const aiSignalsUrl = new URL("https://api.example.com/ai-signals");
-        const featureEngineeringUrl = new URL("https://api.example.com/feature-engineering");
-        const blockchainRecognitionUrl = new URL("https://api.example.com/blockchain-recognition");
-        const alertThresholdsUrl = new URL("https://api.example.com/alert-thresholds");
+        const aiSignalsUrl = new URL("https://hypescan.onrender.com/ai-signals");
+        const featureEngineeringUrl = new URL("https://hypescan.onrender.com/feature-engineering");
+        const blockchainRecognitionUrl = new URL("https://hypescan.onrender.com/blockchain-recognition");
+        const alertThresholdsUrl = new URL("https://hypescan.onrender.com/alert-thresholds");
 
         // Add query parameters for coinAddress and pairAddress
         const params = {

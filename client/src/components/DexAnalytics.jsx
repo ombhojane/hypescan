@@ -43,7 +43,7 @@ const DexAnalytics = ({ coinAddress, pairAddress }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const url = new URL("https://api.example.com/dex-analytics");
+        const url = new URL("https://hypescan.onrender.com/dex-analytics");
         const params = {
           coinAddress, // Adding the coinAddress as a query parameter
           pairAddress, // Adding the pairAddress as a query parameter

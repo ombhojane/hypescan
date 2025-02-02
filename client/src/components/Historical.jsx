@@ -22,8 +22,8 @@ const Historical = ({ coinAddress, pairAddress }) => {
     const fetchData = async () => {
       try {
         // Constructing the API URLs with coinAddress and pairAddress as query parameters
-        const historicalUrl = new URL("https://api.example.com/historical-analysis");
-        const alertsUrl = new URL("https://api.example.com/alerts-notifications");
+        const historicalUrl = new URL("https://hypescan.onrender.com/historical-analysis");
+        const alertsUrl = new URL("https://hypescan.onrender.com/alerts-notifications");
 
         // Add query parameters for coinAddress and pairAddress
         const params = { coinAddress, pairAddress };
