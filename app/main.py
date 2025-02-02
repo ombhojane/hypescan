@@ -163,115 +163,255 @@ async def search_tweets_endpoint(
     return response
 
 
-class Metric(BaseModel):
+# --- Pydantic Models ---
+class LiquidityPool(BaseModel):
+    platform: str
+    pair: str
+    liquidity: float
+    change: float
+
+
+class WhaleTransaction(BaseModel):
+    address: str
+    amount: float
+    asset: str
+    time_ago: str
+
+
+class DexAnalyticsResponse(BaseModel):
+    total_dex_volume: float
+    dex_volume_change: float
+    total_liquidity: float
+    liquidity_change: float
+    unique_traders: int
+    traders_change: float
+    liquidity_pool: List[LiquidityPool]
+    whale_transactions: List[WhaleTransaction]
+
+
+class FeatureEngineering(BaseModel):
     name: str
-    value: str
-    change: str
+    weight: int
+    color: str
+    value: int
 
 
-class SocialMetrics(BaseModel):
-    social_mentions: Metric
-    sentiment_score: Metric
-    influencer_reach: Metric
-    community_growth: Metric
+class BlockchainRecognition(BaseModel):
+    name: str
+    timeFrame: str
+    riskColor: str
+    riskLevel: str
+    riskPercentage: int
 
 
-class RiskMetrics(BaseModel):
-    overall_risk_score: Metric
-    smart_contract_safety: Metric
-    liquidity_lock_status: Metric
+class AlertThreshold(BaseModel):
+    name: str
+    status: str
+    color: str
+    bgColor: str
 
 
-class Alert(BaseModel):
-    title: str
-    description: str
-    priority: str
-    timestamp: str
+class AISignalsResponse(BaseModel):
+    strength: str
+    confidence: int
+    pattern: str
+    patternPhase: str
+    prediction: str
+    forecast: str
+    featureEngineering: List[FeatureEngineering]
+    blockchainRecognition: List[BlockchainRecognition]
+    alertThresholds: List[AlertThreshold]
 
 
-class AlertsNotification(BaseModel):
-    active_alerts: int
-    triggered_today: int
-    success_rate: str
-    response_time: str
-    alerts: List[Alert]
+class RiskAssessmentResponse(BaseModel):
+    sectionId: str
+    overallRiskScore: str
+    riskLevel: str
+    smartContractSafetyPercentage: int
+    smartContractStatus: str
+    liquidityLockStatus: str
+    liquidityLockRemainingDays: int
+    ownershipStatus: str
+    ownershipStatusDescription: str
+    mintFunctionStatus: str
+    mintFunctionDescription: str
+    transferRestrictions: str
+    transferRestrictionsDescription: str
+    liquidityRisk: str
+    liquidityRiskPercentage: int
+    concentrationRisk: str
+    concentrationRiskPercentage: int
+    smartContractRisk: str
+    smartContractRiskPercentage: int
 
 
-class AIAndRiskResponse(BaseModel):
-    social_metrics: SocialMetrics
-    ai_signal_strength: Metric
-    risk_metrics: RiskMetrics
-    alerts_notification: AlertsNotification
+class HistoricalResponse(BaseModel):
+    roi: int
+    pumpPatterns: int
+    averagePumpReturn: int
+    recoveryTime: int
+    activeAlerts: int
+    highPriority: int
+    triggeredToday: int
+    triggeredChange: int
+    successRate: int
+    responseTime: float
 
 
-@app.get("/metrics", response_model=AIAndRiskResponse)
-async def get_metrics():
-    response_data = AIAndRiskResponse(
-        social_metrics=SocialMetrics(
-            social_mentions=Metric(
-                name="Social Mentions (24h)", value="12,458", change="↑ 425%"
-            ),
-            sentiment_score=Metric(
-                name="Sentiment Score", value="7.8/10", change="↑ 2.1"
-            ),
-            influencer_reach=Metric(
-                name="Influencer Reach", value="2.5M", change="↓ 12%"
-            ),
-            community_growth=Metric(
-                name="Community Growth", value="+15.4K", change="↑ 28%"
-            ),
-        ),
-        ai_signal_strength=Metric(
-            name="Overall Signal Strength",
-            value="Strong Buy",
-            change="Confidence: 85%",
-        ),
-        risk_metrics=RiskMetrics(
-            overall_risk_score=Metric(
-                name="Overall Risk Score",
-                value="Medium Risk",
-                change="Risk Level: 6.5/10",
-            ),
-            smart_contract_safety=Metric(
-                name="Smart Contract Safety",
-                value="85%",
-                change="Audited & Verified",
-            ),
-            liquidity_lock_status=Metric(
-                name="Liquidity Lock Status",
-                value="Locked",
-                change="180 Days Remaining",
-            ),
-        ),
-        alerts_notification=AlertsNotification(
-            active_alerts=24,
-            triggered_today=8,
-            success_rate="92%",
-            response_time="1.2s",
-            alerts=[
-                Alert(
-                    title="Critical: Social Mention Spike",
-                    description="PEPE +450% mentions in last 4h",
-                    priority="High Priority",
-                    timestamp="Triggered 5 minutes ago",
-                ),
-                Alert(
-                    title="Warning: Liquidity Change",
-                    description="DOGE -18% liquidity in 24h",
-                    priority="Medium Priority",
-                    timestamp="Triggered 15 minutes ago",
-                ),
-                Alert(
-                    title="Info: Volume Increase",
-                    description="SHIB 2.5x average volume",
-                    priority="Low Priority",
-                    timestamp="Triggered 30 minutes ago",
-                ),
-            ],
-        ),
-    )
+# --- FastAPI Endpoints ---
 
-    return response_data
+
+@app.get("/dex-analytics", response_model=DexAnalyticsResponse)
+async def get_dex_analytics(coinAddress: str, pairAddress: str):
+    # Logic to fetch data based on coinAddress and pairAddress
+    return {
+        "total_dex_volume": 1234567890,
+        "dex_volume_change": 15.2,
+        "total_liquidity": 234567890,
+        "liquidity_change": -3.5,
+        "unique_traders": 890123,
+        "traders_change": 5.4,
+        "liquidity_pool": [
+            {
+                "platform": "Uniswap",
+                "pair": "ETH/USDT",
+                "liquidity": 50,
+                "change": 12.5,
+            },
+            {
+                "platform": "SushiSwap",
+                "pair": "BTC/USDT",
+                "liquidity": 30,
+                "change": -5.2,
+            },
+        ],
+        "whale_transactions": [
+            {
+                "address": "0x12345...",
+                "amount": 500,
+                "asset": "ETH",
+                "time_ago": "5 minutes ago",
+            },
+            {
+                "address": "0x67890...",
+                "amount": -250,
+                "asset": "BTC",
+                "time_ago": "1 hour ago",
+            },
+        ],
+    }
+
+
+@app.get("/ai-signals", response_model=AISignalsResponse)
+async def get_ai_signals(coinAddress: str, pairAddress: str):
+    # Logic to fetch AI signals data based on coinAddress and pairAddress
+    return {
+        "strength": "Strong Buy",
+        "confidence": 85,
+        "pattern": "Accumulation",
+        "patternPhase": "Phase 2/4",
+        "prediction": "+42% Expected",
+        "forecast": "24h Forecast",
+        "featureEngineering": [
+            {
+                "name": "Social Volume Velocity",
+                "weight": 30,
+                "color": "green",
+                "value": 85,
+            },
+            {
+                "name": "Influencer Impact",
+                "weight": 20,
+                "color": "blue",
+                "value": 65,
+            },
+            {
+                "name": "Historical Pump Pattern",
+                "weight": 25,
+                "color": "purple",
+                "value": 75,
+            },
+        ],
+        "blockchainRecognition": [
+            {
+                "name": "Wash Trading Detection",
+                "timeFrame": "Last 24 Hours",
+                "riskColor": "green",
+                "riskLevel": "Low Risk",
+                "riskPercentage": 5,
+            },
+            {
+                "name": "Smart Money Movement",
+                "timeFrame": "Accumulation Phase",
+                "riskColor": "green",
+                "riskLevel": "Strong Signal",
+                "riskPercentage": 95,
+            },
+        ],
+        "alertThresholds": [
+            {
+                "name": "Social Mention Spike (+400% in 4h)",
+                "status": "Triggered",
+                "color": "green",
+                "bgColor": "green",
+            },
+            {
+                "name": "Liquidity Change (±15% in 24h)",
+                "status": "Warning",
+                "color": "yellow",
+                "bgColor": "yellow",
+            },
+            {
+                "name": "Transaction Volume (2x 7-day avg)",
+                "status": "Normal",
+                "color": "gray",
+                "bgColor": "gray",
+            },
+        ],
+    }
+
+
+@app.get("/risk-assessment", response_model=RiskAssessmentResponse)
+async def get_risk_assessment(coinAddress: str, pairAddress: str):
+    # Logic to fetch risk assessment data based on coinAddress and pairAddress
+    return {
+        "sectionId": "5a8714c4-1dbf-42ca-8baf-61526238d342",
+        "overallRiskScore": "Medium Risk",
+        "riskLevel": "6.5/10",
+        "smartContractSafetyPercentage": 85,
+        "smartContractStatus": "Audited & Verified",
+        "liquidityLockStatus": "Locked",
+        "liquidityLockRemainingDays": 180,
+        "ownershipStatus": "Renounced",
+        "ownershipStatusDescription": "Contract ownership has been renounced, reducing rugpull risk",
+        "mintFunctionStatus": "Present",
+        "mintFunctionDescription": "Contract contains mint function - potential supply inflation risk",
+        "transferRestrictions": "Limited",
+        "transferRestrictionsDescription": "Max transaction limit: 1% of total supply",
+        "liquidityRisk": "Medium",
+        "liquidityRiskPercentage": 45,
+        "concentrationRisk": "High",
+        "concentrationRiskPercentage": 75,
+        "smartContractRisk": "Low",
+        "smartContractRiskPercentage": 15,
+    }
+
+
+@app.get("/historical", response_model=HistoricalResponse)
+async def get_historical_data(coinAddress: str, pairAddress: str):
+    # Logic to fetch historical data based on coinAddress and pairAddress
+    return {
+        "roi": 1245,
+        "pumpPatterns": 4,
+        "averagePumpReturn": 85,
+        "recoveryTime": 48,
+        "activeAlerts": 24,
+        "highPriority": 12,
+        "triggeredToday": 8,
+        "triggeredChange": 3,
+        "successRate": 92,
+        "responseTime": 1.2,
+    }
 
 
 class ChatMessage(BaseModel):
