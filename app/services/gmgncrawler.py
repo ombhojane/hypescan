@@ -2,20 +2,24 @@ import asyncio
 import os
 import google.generativeai as genai
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode
+from dotenv import load_dotenv
 
-async def main():
+load_dotenv()
+
+async def crawl_gmgn(url):
     browser_config = BrowserConfig(headless=True, verbose=True)
     crawl_config = CrawlerRunConfig(cache_mode=CacheMode.BYPASS)
 
     async with AsyncWebCrawler(browser_config=browser_config) as crawler:
         result = await crawler.arun(
-            url="https://gmgn.ai/base/token/VIVOWmEQ_0x93d4e4aafe1eb975244175acd06a6873eb1c98ff",
+            url=url,
             config=crawl_config
         )
-        
+        # print(result.markdown)
+
         if result.success:
             # Configure Gemini
-            genai.configure(api_key='AIzaSyBM6LRq0J-CorEjN-cY65P0RHpiGkrtRHE')
+            genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
             generation_config = {
                 "temperature": 0.1, # Lower temperature for more focused output
@@ -52,16 +56,21 @@ async def main():
             Raw Data:
             {data}
 
-            Format the response as a clean JSON object without any markdown formatting or additional headers. Include all available metrics and insights from the provided data.
+            Format the response as a clean JSON object without any markdown formatting or additional headers or ```json```. Include all available metrics and insights from the provided data.
             """
 
+            print(prompt.format(data=str(result.markdown)))
+
             response = chat_session.send_message(prompt.format(data=str(result)))
+
+
+
             with open("analyzed_token_data_1.json", "w", encoding="utf-8") as f:
                 f.write(response.text)
             print("Analyzed Token Data saved to analyzed_token_data.json")
             print(response.text)
-
+            return response.text
         else:
-            print("Crawl failed")
+            print("Attempt failed")
 
-asyncio.run(main())
+# asyncio.run(main())
