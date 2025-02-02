@@ -1,17 +1,44 @@
-```json
 {
-  "Top Holders Analysis": {
-    "Top 10 Holder Percentages": null,
-    "Dev Wallet Status and Transactions": null,
-    "Sniper Activity and Counts": null,
-    "Blue Chip Holder Percentage": null
+  "top_holders_analysis": {
+    "top_10_holder_percentage": 21.1,
+    "dev_wallet_status": {
+      "balance": "1,525,557.1605 POT",
+      "status": "Liquidity removed by creator"
+    },
+    "dev_wallet_transactions": "Not available in provided data", 
+    "sniper_activity": {
+      "count": 5,
+      "total_transactions": 70
+    },
+    "blue_chip_holder_percentage": 4.8
   },
-  "Security Analysis": {
-    "Contract Verification Status": null,
-    "Honeypot Check Results": null,
-    "Buy/Sell Taxes": null,
-    "Risk Assessment Score": null,
-    "Renounced Status": null
+  "security_analysis": {
+    "contract_verification_status": "Yes",
+    "honeypot_check_results": "No",
+    "buy_tax": 0.01,
+    "sell_tax": 0,
+    "risk_assessment_score": {
+      "honeypot.is": "0 Risk",
+      "gopluslabs": "Not directly provided, link available for further analysis",
+      "rug_probability": 24.3
+    },
+    "renounced_status": "Yes"
+  },
+  "additional_information": {
+    "token_name": "Harry Pothead",
+    "token_symbol": "POT",
+    "token_address": "0x23dD3Ce6161422622E773E13dAC2781C7f990D45",
+    "chain": "Base",
+    "price": 0.00042255,
+    "market_cap": "$422.6K",
+    "24h_volume": "$569K",
+    "liquidity": "$92.7K",
+    "total_supply": "1B",
+    "holders": 385594,
+    "pair_address": "0x972798f563ad54d15116672e9b72f84a9054d672",
+    "token_creator_address": "0xb7fe1d3500cd37e4aa7512e9269c58f76a0bcaeb",
+    "pool_creation_date": "02/01/2025 02:51" 
   }
 }
-```
+
+

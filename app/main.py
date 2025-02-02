@@ -3,6 +3,7 @@ from core.agentic_ai import AgenticAI
 from services.coin_api import validate_coin, CoinInfo
 from services.social_api import get_reddit_sentiment, RedditSentimentResponse
 from services.dex_api import get_dex_data
+import operator
 
 # from models.forecasting import Prediction
 from services.moralisapi import fetch_token_price
@@ -70,9 +71,9 @@ def get_token_price(token_address: str):
 
 
 @app.post("/analyze-token-price")
-async def analyze_token_price(token_address: str):
+async def analyze_token_price(token_pair_address: str):
     # Fetch the token price
-    price_data = fetch_token_price(token_address)
+    price_data = fetch_token_price(token_pair_address)
     if "error" in price_data:
         raise HTTPException(status_code=400, detail=price_data["error"])
 
@@ -83,13 +84,12 @@ async def analyze_token_price(token_address: str):
     return analysis_result
 
 
-@app.get("/gmgn-info", response_model=GMGNResponse)
+@app.get("/gmgn-info")
 async def get_gmgn_token_info(token_address: str):
-    """
-    Get token information from GMGN.ai
-    """
-    response = await crawl_gmgn(token_address)
-    if response is None or response.status == "error":
+    base_url = "https://gmgn.ai/base/token/VIVOWmEQ_"
+    url = operator.concat(base_url, token_address)
+    response = await crawl_gmgn(url)
+    if response is None:
         raise HTTPException(status_code=400, detail=response.error if response else "Error fetching GMGN data")
     return response
 
