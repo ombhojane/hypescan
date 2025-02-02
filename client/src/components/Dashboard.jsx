@@ -25,12 +25,32 @@ const Dashboard = () => {
   const [coinAddress, setCoinAddress] = useState(""); // New state for coin address
   const [pairAddress, setPairAddress] = useState(""); // New state for pair address
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle submit logic here
-    console.log(
-      `Analyzing: ${coinName} on ${network} with coin address ${coinAddress} and pair address ${pairAddress}`
-    );
+    setLoading(true); // Show loading state while the request is in progress
+
+    try {
+      // Construct the query parameters from the form state
+      const queryParams = new URLSearchParams({
+        coinAddress,
+        pairAddress,
+        // coinName,
+        // network,
+      }).toString();
+
+      // Send the request with query params in the URL
+      const response = await fetch(`/api/submit?${queryParams}`, {
+        method: "GET", // Use GET method to send query params
+      });
+
+      const result = await response.json();
+      // Assuming the response contains the updated coinData
+      setCoinData(result); // Update the coinData state with the new data from the API
+      setLoading(false); // Hide loading state after response
+    } catch (error) {
+      console.error("Error submitting the data:", error);
+      setLoading(false); // Hide loading state in case of error
+    }
   };
 
   if (loading) {
@@ -39,96 +59,6 @@ const Dashboard = () => {
 
   if (!coinData) {
     return <div>No data found.</div>;
-  }
-
-  const [data, setData] = useState({
-    total_dex_volume: 12345678,
-    total_liquidity: 45678912,
-    unique_traders: 2456,
-    dex_volume_change: 15.2,
-    liquidity_change: -3.4,
-    traders_change: 8.7,
-    liquidity_pool: [
-      {
-        platform: "Uniswap V3",
-        pair: "WETH/USDT",
-        liquidity: 2.45,
-        change: 5.2,
-      },
-      {
-        platform: "PancakeSwap",
-        pair: "BNB/BUSD",
-        liquidity: 1.78,
-        change: -2.1,
-      },
-    ],
-    whale_transactions: [
-      {
-        address: "0x1234...5678",
-        amount: 500,
-        asset: "ETH",
-        time_ago: "2min ago",
-      },
-      {
-        address: "0x8765...4321",
-        amount: -300,
-        asset: "ETH",
-        time_ago: "5min ago",
-      },
-    ],
-    social_mentions: 12458,
-    sentiment_score: 7.8,
-    influencer_reach: 2500000,
-    community_growth: 15400,
-    platform_sentiment: [
-      {
-        platform: "Twitter",
-        sentiment: "Very Positive",
-        percentage: 85,
-      },
-      {
-        platform: "Reddit",
-        sentiment: "Neutral",
-        percentage: 52,
-      },
-      {
-        platform: "Telegram",
-        sentiment: "Positive",
-        percentage: 72,
-      },
-    ],
-    top_influencers: [
-      {
-        handle: "@crypto_whale",
-        followers: 1200000,
-        impact: "+15%",
-      },
-      {
-        handle: "@defi_master",
-        followers: 845000,
-        impact: "+8%",
-      },
-    ],
-  });
-
-  // Fetch data from API on mount
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("/api/data"); // Replace with your actual API endpoint
-        const result = await response.json();
-        setData(result);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
-
-  // Render loading state if data is not yet fetched
-  if (!data) {
-    return <div>Loading...</div>;
   }
 
   return (
@@ -144,7 +74,7 @@ const Dashboard = () => {
                 <div className='p-4 border border-neutral-200/20 rounded-lg'>
                   <h3 className='text-lg font-semibold mb-4'>Coin Analysis Input</h3>
                   <form onSubmit={handleSubmit} className='space-y-4'>
-                    <div>
+                    {/* <div>
                       <label
                         className='block text-sm font-medium text-gray-700 mb-1'
                         htmlFor='coin-name'>
@@ -176,7 +106,7 @@ const Dashboard = () => {
                           </option>
                         ))}
                       </select>
-                    </div>
+                    </div> */}
                     <div>
                       <label
                         className='block text-sm font-medium text-gray-700 mb-1'
