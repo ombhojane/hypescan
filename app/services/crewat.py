@@ -28,3 +28,25 @@ crew = Crew(
     llm=llm,
     verbose=True
 )
+
+gngm_analyzer=Agent(
+    role="GMGN Analyzer",
+    goal="Analyze the token data {data} and provide insights based on key metrics.",
+    backstory="An expert in blockchain and crypto data analysis, providing insights whether the token is a good investment or not.",
+    verbose=True,
+    llm=llm
+)
+
+gngm_analysis_task=Task(
+    description="Analyze the token data {data} and provide insights based on key metrics.",
+    agent=gngm_analyzer,
+    goal="Provide a brief analysis of the token data {data}, and give forcast on whether it is a good investment or not. Do not suggest any recommendations.",
+    expected_output="gmgn_analysis.md"
+)
+
+gngm_crew=Crew(
+    agents=[gngm_analyzer,],
+    tasks=[gngm_analysis_task,],
+    llm=llm,
+    verbose=True
+)

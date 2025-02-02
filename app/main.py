@@ -9,7 +9,7 @@ import operator
 from services.moralisapi import fetch_token_price
 import uvicorn
 from services.gmgn_api import get_gmgn_info, GMGNResponse
-from services.crewat import crew
+from services.crewat import crew,gngm_crew
 from services.twitter_api import (
     search_twitter,
     SearchType,
@@ -40,29 +40,6 @@ async def get_sentiment(symbol: str):
     return sentiment
 
 
-# @app.get("/forecast", response_model=Prediction)
-# async def forecast(symbol: str):
-#     # Fetch data from all sources
-#     coin_data = await validate_coin(symbol)
-#     dex_data = await get_dex_data(symbol)
-#     sentiment = await get_reddit_sentiment(symbol)
-
-#     # Combine data into one analysis
-#     data = {
-#         "coin_data": coin_data.dict(),
-#         "dex_data": dex_data.dict(),
-#         "sentiment": sentiment.dict(),
-#     }
-
-#     # Process with Agentic AI
-#     ai_model = AgenticAI(data)
-#     prediction = ai_model.predict()
-
-#     return Prediction(
-#         prediction=prediction['prediction'], confidence=prediction['confidence']
-#     )
-
-
 @app.get("/token-price")
 def get_token_price(token_address: str):
     price_data = fetch_token_price(token_address)
@@ -78,7 +55,7 @@ async def analyze_token_price(token_pair_address: str):
     if "error" in price_data:
         raise HTTPException(status_code=400, detail=price_data["error"])
 
-    print({"price_data": price_data})
+    # print({"price_data": price_data})
 
     # Kickoff the analysis with the token price data
     analysis_result = crew.kickoff(inputs={"data": price_data})
@@ -92,7 +69,8 @@ async def get_gmgn_token_info(token_address: str):
     response = await crawl_gmgn(url)
     if response is None:
         raise HTTPException(status_code=400, detail=response.error if response else "Error fetching GMGN data")
-    return response
+    analysis_result=gngm_crew.kickoff(inputs={"data":response})
+    return analysis_result
 
 
 class AIAnalysisResponse(BaseModel):
