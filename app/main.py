@@ -8,9 +8,11 @@ from services.moralisapi import fetch_token_price
 import uvicorn
 from services.gmgn_api import get_gmgn_info, GMGNResponse
 from services.crewat import crew
+from services.twitter_api import search_twitter, SearchType, TwitterSearchResponse
 from dotenv import load_dotenv
 from services.gemini import analyze_gmgn_data
 from pydantic import BaseModel
+import os
 
 app = FastAPI()
 load_dotenv()
@@ -102,6 +104,35 @@ async def analyze_token(token_address: str):
     analysis = await analyze_gmgn_data(gmgn_response.markdown)
     
     return analysis
+
+@app.get("/twitter-search", response_model=TwitterSearchResponse)
+async def search_tweets_endpoint(
+    query: str,
+    search_type: SearchType = SearchType.TOP,
+    max_tweets: int = 10
+):
+    """
+    Search for tweets based on a query.
+    """
+    # Get Twitter credentials from environment variables
+    twitter_username = os.getenv("TWITTER_USERNAME")
+    twitter_password = os.getenv("TWITTER_PASSWORD")
+    
+    if not twitter_username or not twitter_password:
+        raise HTTPException(status_code=500, detail="Twitter credentials not configured")
+    
+    response = await search_twitter(
+        query=query,
+        search_type=search_type,
+        max_tweets=max_tweets,
+        username=twitter_username,
+        password=twitter_password
+    )
+    
+    if response.status == "error":
+        raise HTTPException(status_code=400, detail=response.error)
+        
+    return response
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
