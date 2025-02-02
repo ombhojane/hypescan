@@ -1,30 +1,37 @@
 {
   "top_holders_analysis": {
-    "top_10_holder_percentage": 16.7,
+    "top_10_holder_percentage": 16.76,
     "dev_wallet_status": {
       "balance": "233272172150.775",
       "status": "creator_remove_liquidity" 
     },
-    "dev_wallet_transactions": [], 
+    "dev_wallet_transactions": "Not available in provided data", 
     "sniper_activity": {
-      "sniper_count": 2,
-      "total_transactions": 70
+      "count": 2,
+      "total_sniper_tx": 70
     },
     "blue_chip_holder_percentage": 0.3
   },
   "security_analysis": {
-    "contract_verification_status": true,
-    "honeypot_check_results": false, 
+    "contract_verification_status": "Yes",
+    "honeypot_check_results": "No",
     "buy_tax": 0,
     "sell_tax": 0.01,
     "risk_assessment_score": {
-      "honeypot.is": {
-        "risks": 1
-      },
-      "gopluslabs": {} 
+      "honeypot.is": "1 Risk",
+      "gopluslabs": "Safe (4/4)"
     },
-    "renounced_status": true
+    "renounced_status": "Yes"
+  },
+  "additional_information": {
+    "name": "BasedPepe",
+    "symbol": "PEPE",
+    "price": 0.0000001355587862083,
+    "market_cap": "$57M",
+    "liquidity": "$3.2M",
+    "24h_volume": "$1.6M",
+    "holders": 1981846,
+    "total_supply": "420.7T",
+    "pair_created": "08/09/2024 00:36"
   }
 }
-
-
