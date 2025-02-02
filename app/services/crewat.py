@@ -72,3 +72,50 @@ twitter_crew=Crew(
     llm=llm,
     verbose=True
 )
+
+twitter_analyzer=Agent(
+    role="Twitter Analyzer",
+    goal="Analyze the sentiment of the tweets from the twitter data {data} and provide insights based on the sentiment.",
+    backstory="An expert in sentiment analysis, providing insights on the mood of the community and how it is affecting the token.",
+    verbose=True,
+    llm=llm
+)
+
+twitter_analysis_task=Task(
+    description="Analyze the sentiment of the tweets from the twitter data {data} and provide insights based on the sentiment.",
+    agent=twitter_analyzer,
+    goal="Provide a brief analysis of the sentiment of the tweets from the twitter data {data}, and give forcast on whether the social sentiment is positive or negative. Provide a score of the sentiment from 0 to 100.",
+    expected_output="twitter_analysis.md"
+)
+
+twitter_crew=Crew(
+    agents=[twitter_analyzer,],
+    tasks=[twitter_analysis_task,],
+    llm=llm,
+    verbose=True
+)
+
+# Deepseek Analysis Agent
+deepseek_analyzer = Agent(
+    role="Deepseek Analysis Expert",
+    goal="Synthesize and analyze multiple cryptocurrency analysis reports to provide comprehensive insights.",
+    backstory="A specialized AI analyst with expertise in combining multiple data sources and analysis reports to generate actionable cryptocurrency insights and predictions.",
+    verbose=True,
+    llm=llm
+)
+
+# Deepseek Analysis Task
+deepseek_analysis_task = Task(
+    description="Analyze and synthesize the combined outputs from token analysis and GMGN analysis to provide comprehensive insights.",
+    agent=deepseek_analyzer,
+    goal="Review the token analysis: {token_analysis} and GMGN analysis: {gmgn_analysis}, then provide a comprehensive synthesis with key insights, risks, and potential outcomes.",
+    expected_output="deepseek_analysis.md"
+)
+
+# Combined Analysis Crew
+combined_analysis_crew = Crew(
+    agents=[analyzer, gngm_analyzer, deepseek_analyzer],
+    tasks=[token_analysis_task, gngm_analysis_task, deepseek_analysis_task],
+    llm=llm,
+    verbose=True
+)
