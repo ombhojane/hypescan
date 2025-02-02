@@ -9,7 +9,7 @@ import operator
 from services.moralisapi import fetch_token_price
 import uvicorn
 from services.gmgn_api import get_gmgn_info, GMGNResponse
-from services.crewat import crew,gngm_crew
+from services.crewat import crew,gngm_crew,twitter_crew
 from services.twitter_api import (
     search_twitter,
     SearchType,
@@ -20,6 +20,7 @@ from services.gemini import analyze_gmgn_data
 from pydantic import BaseModel
 from services.gmgncrawler import crawl_gmgn
 import os
+import json
 
 from typing import List
 from services.deepseek import get_deepseek_completion
@@ -78,25 +79,25 @@ class AIAnalysisResponse(BaseModel):
     status: str
 
 
-@app.get("/analyze-token", response_model=AIAnalysisResponse)
-async def analyze_token(token_address: str):
-    """
-    Get token information from GMGN.ai and analyze it using AI
-    """
-    # First get GMGN data
-    gmgn_response = await get_gmgn_info(token_address)
-    if gmgn_response.status == "error":
-        raise HTTPException(status_code=400, detail=gmgn_response.error)
+# @app.get("/analyze-token", response_model=AIAnalysisResponse)
+# async def analyze_token(token_address: str):
+#     """
+#     Get token information from GMGN.ai and analyze it using AI
+#     """
+#     # First get GMGN data
+#     gmgn_response = await get_gmgn_info(token_address)
+#     if gmgn_response.status == "error":
+#         raise HTTPException(status_code=400, detail=gmgn_response.error)
 
-    # Analyze the data using Gemini
-    analysis = await analyze_gmgn_data(gmgn_response.markdown)
+#     # Analyze the data using Gemini
+#     analysis = await analyze_gmgn_data(gmgn_response.markdown)
 
-    return analysis
+#     return analysis
 
 
-@app.get("/twitter-search", response_model=TwitterSearchResponse)
+@app.get("/twitter-search")
 async def search_tweets_endpoint(
-    query: str, search_type: SearchType = SearchType.TOP, max_tweets: int = 10
+    query: str, search_type: SearchType = SearchType.TOP, max_tweets: int = 100
 ):
     # Get Twitter credentials from environment variables
     twitter_username = os.getenv("TWITTER_USERNAME")
@@ -117,8 +118,13 @@ async def search_tweets_endpoint(
 
     if response.status == "error":
         raise HTTPException(status_code=400, detail=response.error)
-
-    return response
+    response_dict=response.dict()
+    # Extract only the tweet texts
+    tweets_text_only = {"tweets": [tweet["text"] for tweet in response_dict["tweets"]]}
+    # Convert to JSON format
+    tweets_json = json.dumps(tweets_text_only, indent=4)
+    analysis_result=twitter_crew.kickoff(inputs={"data":tweets_json})
+    return analysis_result
 
 
 class Metric(BaseModel):
