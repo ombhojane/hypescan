@@ -5,6 +5,8 @@ import os
 
 api_key = os.getenv("OPENAI_API_KEY")
 llm = LLM(model="groq/llama-3.3-70b-versatile", temperature=0.3, api_key=api_key)
+llm1=LLM(model="groq/deepseek-r1-distill-llama-70b", temperature=0.3, api_key=api_key)
+llm2=LLM(model="groq/llama3-8b-8192", temperature=0.3, api_key=api_key)
 # Data Analyzer Agent
 analyzer = Agent(
     role="Data Analyzer",
@@ -56,7 +58,7 @@ twitter_analyzer=Agent(
     goal="Analyze the sentiment of the tweets from the twitter data {data} and provide insights based on the sentiment.",
     backstory="An expert in sentiment analysis, providing insights on the mood of the community and how it is affecting the token.",
     verbose=True,
-    llm=llm
+    llm=llm1
 )
 
 twitter_analysis_task=Task(
@@ -73,27 +75,6 @@ twitter_crew=Crew(
     verbose=True
 )
 
-twitter_analyzer=Agent(
-    role="Twitter Analyzer",
-    goal="Analyze the sentiment of the tweets from the twitter data {data} and provide insights based on the sentiment.",
-    backstory="An expert in sentiment analysis, providing insights on the mood of the community and how it is affecting the token.",
-    verbose=True,
-    llm=llm
-)
-
-twitter_analysis_task=Task(
-    description="Analyze the sentiment of the tweets from the twitter data {data} and provide insights based on the sentiment.",
-    agent=twitter_analyzer,
-    goal="Provide a brief analysis of the sentiment of the tweets from the twitter data {data}, and give forcast on whether the social sentiment is positive or negative. Provide a score of the sentiment from 0 to 100.",
-    expected_output="twitter_analysis.md"
-)
-
-twitter_crew=Crew(
-    agents=[twitter_analyzer,],
-    tasks=[twitter_analysis_task,],
-    llm=llm,
-    verbose=True
-)
 
 # Deepseek Analysis Agent
 deepseek_analyzer = Agent(
@@ -101,7 +82,7 @@ deepseek_analyzer = Agent(
     goal="Synthesize and analyze multiple cryptocurrency analysis reports to provide comprehensive insights.",
     backstory="A specialized AI analyst with expertise in combining multiple data sources and analysis reports to generate actionable cryptocurrency insights and predictions.",
     verbose=True,
-    llm=llm
+    llm=llm1
 )
 
 # Deepseek Analysis Task
@@ -119,3 +100,27 @@ combined_analysis_crew = Crew(
     llm=llm,
     verbose=True
 )
+
+predict_agent=Agent(
+    role="Predictor",
+    goal="Predict the future movement of the token based on the data {data}.",
+    backstory="A Blockchain and Crypto expert in predicting the future trends of the token based on the data.",
+    verbose=True,
+    llm=llm1
+)
+
+predict_task=Task(
+    description="Predict the future movement of the token based on the data {data}.",
+    agent=predict_agent,
+    goal=("Provide a brief prediction of the future movement of the token based on the data {data}. "
+    "Highlight the key factors that are driving the movement. Suggest an Action to the user like [Strong Buy, Buy, Hold, Sell, Strong Sell]"),
+    expected_output="predict_output.md"
+)
+
+predict_crew=Crew(
+    agents=[predict_agent,],
+    tasks=[predict_task,],
+    llm=llm2,
+    verbose=True
+)
+

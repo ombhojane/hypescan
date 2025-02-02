@@ -1,0 +1,30 @@
+{
+  "top_holders_analysis": {
+    "top_10_holder_percentage": 16.7,
+    "dev_wallet_status": {
+      "balance": "233272172150.775",
+      "status": "creator_remove_liquidity" 
+    },
+    "dev_wallet_transactions": [], 
+    "sniper_activity": {
+      "sniper_count": 2,
+      "total_transactions": 70
+    },
+    "blue_chip_holder_percentage": 0.3
+  },
+  "security_analysis": {
+    "contract_verification_status": true,
+    "honeypot_check_results": false, 
+    "buy_tax": 0,
+    "sell_tax": 0.01,
+    "risk_assessment_score": {
+      "honeypot.is": {
+        "risks": 1
+      },
+      "gopluslabs": {} 
+    },
+    "renounced_status": true
+  }
+}
+
+
