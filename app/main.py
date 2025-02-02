@@ -9,7 +9,7 @@ import operator
 from services.moralisapi import fetch_token_price
 import uvicorn
 from services.gmgn_api import get_gmgn_info, GMGNResponse
-from services.crewat import crew,gngm_crew
+from services.crewat import crew,gngm_crew,twitter_crew
 from services.twitter_api import (
     search_twitter,
     SearchType,
@@ -20,6 +20,7 @@ from services.gemini import analyze_gmgn_data
 from pydantic import BaseModel
 from services.gmgncrawler import crawl_gmgn
 import os
+import json
 
 from typing import List
 from services.deepseek import get_deepseek_completion
@@ -55,11 +56,30 @@ async def analyze_token_price(token_pair_address: str):
     if "error" in price_data:
         raise HTTPException(status_code=400, detail=price_data["error"])
 
-    # print({"price_data": price_data})
-
-    # Kickoff the analysis with the token price data
-    analysis_result = crew.kickoff(inputs={"data": price_data})
-    return analysis_result
+    # Get token analysis
+    token_analysis = crew.kickoff(inputs={"data": price_data})
+    
+    # Get GMGN analysis
+    base_url = "https://gmgn.ai/base/token/VIVOWmEQ_"
+    url = operator.concat(base_url, token_pair_address)
+    gmgn_data = await crawl_gmgn(url)
+    if gmgn_data is None:
+        raise HTTPException(status_code=400, detail="Error fetching GMGN data")
+    gmgn_analysis = gngm_crew.kickoff(inputs={"data": gmgn_data})
+    
+    # Perform combined analysis using Deepseek
+    combined_result = combined_analysis_crew.kickoff(
+        inputs={
+            "token_analysis": token_analysis,
+            "gmgn_analysis": gmgn_analysis
+        }
+    )
+    
+    return {
+        "token_analysis": token_analysis,
+        "gmgn_analysis": gmgn_analysis,
+        "combined_analysis": combined_result
+    }
 
 
 @app.get("/gmgn-info")
@@ -68,9 +88,32 @@ async def get_gmgn_token_info(token_address: str):
     url = operator.concat(base_url, token_address)
     response = await crawl_gmgn(url)
     if response is None:
-        raise HTTPException(status_code=400, detail=response.error if response else "Error fetching GMGN data")
-    analysis_result=gngm_crew.kickoff(inputs={"data":response})
-    return analysis_result
+        raise HTTPException(status_code=400, detail="Error fetching GMGN data")
+        
+    # Get GMGN analysis
+    gmgn_analysis = gngm_crew.kickoff(inputs={"data": response})
+    
+    # Get token price data
+    price_data = fetch_token_price(token_address)
+    if "error" not in price_data:
+        # Get token analysis
+        token_analysis = crew.kickoff(inputs={"data": price_data})
+        
+        # Perform combined analysis
+        combined_result = combined_analysis_crew.kickoff(
+            inputs={
+                "token_analysis": token_analysis,
+                "gmgn_analysis": gmgn_analysis
+            }
+        )
+        
+        return {
+            "token_analysis": token_analysis,
+            "gmgn_analysis": gmgn_analysis,
+            "combined_analysis": combined_result
+        }
+    
+    return gmgn_analysis
 
 
 class AIAnalysisResponse(BaseModel):
@@ -78,25 +121,25 @@ class AIAnalysisResponse(BaseModel):
     status: str
 
 
-@app.get("/analyze-token", response_model=AIAnalysisResponse)
-async def analyze_token(token_address: str):
-    """
-    Get token information from GMGN.ai and analyze it using AI
-    """
-    # First get GMGN data
-    gmgn_response = await get_gmgn_info(token_address)
-    if gmgn_response.status == "error":
-        raise HTTPException(status_code=400, detail=gmgn_response.error)
+# @app.get("/analyze-token", response_model=AIAnalysisResponse)
+# async def analyze_token(token_address: str):
+#     """
+#     Get token information from GMGN.ai and analyze it using AI
+#     """
+#     # First get GMGN data
+#     gmgn_response = await get_gmgn_info(token_address)
+#     if gmgn_response.status == "error":
+#         raise HTTPException(status_code=400, detail=gmgn_response.error)
 
-    # Analyze the data using Gemini
-    analysis = await analyze_gmgn_data(gmgn_response.markdown)
+#     # Analyze the data using Gemini
+#     analysis = await analyze_gmgn_data(gmgn_response.markdown)
 
-    return analysis
+#     return analysis
 
 
-@app.get("/twitter-search", response_model=TwitterSearchResponse)
+@app.get("/twitter-search")
 async def search_tweets_endpoint(
-    query: str, search_type: SearchType = SearchType.TOP, max_tweets: int = 10
+    query: str, search_type: SearchType = SearchType.TOP, max_tweets: int = 100
 ):
     # Get Twitter credentials from environment variables
     twitter_username = os.getenv("TWITTER_USERNAME")
@@ -117,8 +160,13 @@ async def search_tweets_endpoint(
 
     if response.status == "error":
         raise HTTPException(status_code=400, detail=response.error)
-
-    return response
+    response_dict=response.dict()
+    # Extract only the tweet texts
+    tweets_text_only = {"tweets": [tweet["text"] for tweet in response_dict["tweets"]]}
+    # Convert to JSON format
+    tweets_json = json.dumps(tweets_text_only, indent=4)
+    analysis_result=twitter_crew.kickoff(inputs={"data":tweets_json})
+    return analysis_result
 
 
 # --- Pydantic Models ---
