@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 import httpx
+import asyncio
 
 
 class CoinInfo(BaseModel):
@@ -19,3 +20,8 @@ async def validate_coin(symbol: str) -> CoinInfo:
             name=data['name'],
             is_valid=True if response.status_code == 200 else False,
         )
+
+# validate_coin_sync = httpx.Client().get
+# response = asyncio.run(validate_coin("bitcoin"))
+
+# print(response)
