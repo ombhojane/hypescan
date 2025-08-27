@@ -28,9 +28,6 @@
 #             data=[DexPairData(**pair) for pair in data.get('pairs', [])]
 #         )
 
-# response = asyncio.run(get_dex_data("GNHW5JetZmW85vAU35KyoDcYoSd3sNWtx5RPMTDJpump"))
-
-# print(response)
 
 import requests
 
